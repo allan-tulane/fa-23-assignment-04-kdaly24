@@ -16,16 +16,50 @@ def MED(S, T):
         if (S[0] == T[0]):
             return(MED(S[1:], T[1:]))
         else:
-            return(1 + min(MED(S, T[1:]), MED(S[1:], T)))
+            return(1 + min(MED(S, T[1:]), MED(S[1:], T), MED(S[:-1], T)))
 
 
 def fast_MED(S, T, MED={}):
-    # TODO -  implement top-down memoization
-    pass
+    if (S, T) in MED.keys():
+        return MED[(S, T)]
+    else:
+        if (S == ""):
+            MED[(S, T)] = len(T)
+        elif (T == ""):
+            MED[(S, T)] = len(S)
+        else:
+            if (S[0] == T[0]):
+                MED[(S, T)] = fast_MED(S[1:], T[1:], MED)
+            else:
+                MED[(S, T)] = 1 + min(fast_MED(S, T[1:], MED), fast_MED(S[1:], T, MED), fast_MED(S[:-1], T, MED))
+    return MED[(S, T)]
 
 def fast_align_MED(S, T, MED={}):
-    # TODO - keep track of alignment
-    pass
+    if (S, T) in MED.keys():
+        return MED[(S, T)]
+    
+    else:
+        if (S == ""):
+            MED[(S, T)] = (len(T), ('-' * len(T), T))
+        elif (T == ""):
+            MED[(S, T)] = (len(S), (S, '-' * len(S)))
+        else:
+            if (S[0] == T[0]):
+                temp = fast_align_MED(S[1:], T[1:], MED)
+                MED[(S, T)] = (temp[0], (S[0] + temp[1][0], T[0] + temp[1][1]))
+            else:
+                insert = fast_align_MED(S, T[1:], MED)
+                delete = fast_align_MED(S[1:], T, MED)
+                sub = fast_align_MED(S[:-1], T, MED)
+
+                if insert[0] <= delete[0] and insert[0] <= sub[0]:
+                    MED[(S, T)] = (1 + insert[0], ('-' + insert[1][0], T[0] + insert[1][1]))
+                elif delete[0] <= insert[0] and delete[0] <= sub[0]:
+                    MED[(S, T)] = (1 + delete[0], (S[0] + delete[1][0], '-' + delete[1][1]))
+                else:
+                    MED[(S, T)] = (2 + sub[0], (S[0] + sub[1][0], T[0] + sub[1][1]))
+        
+        return MED[(S, T)]
 
 def test_MED():
     for S, T in test_cases:
